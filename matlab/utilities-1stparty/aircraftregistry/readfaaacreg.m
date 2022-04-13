@@ -1,6 +1,8 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
-% SPDX-License-Identifier: BSD-2-Clause
 function readfaaacreg(varargin)
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
+% SPDX-License-Identifier: BSD-2-Clause
+%
+% SEE ALSO parseCert
 
 %% Input parser
 p = inputParser;
@@ -16,7 +18,20 @@ parse(p,varargin{:});
 
 %% Load aircraft reference file
 fid = fopen([p.Results.inDir filesep 'ACFTREF.txt'],'r'); % Open File
-textACREF = textscan(fid,'%07.0s %030.0s %020.0s %01.0s %02.0s %01.0s %01.0s %02.0s %03.0f %07.0s %04.0s','HeaderLines',1,'Delimiter',',');
+
+% Based on number of characters in header row, read in data
+% The FAA changed the aircraft reference file in 2020, the switch / case is
+% to promotes backwards compatibility with data prior to 2020/12/03
+% https://github.com/Airspace-Encounter-Models/em-core/issues/4
+textHeader = fgetl(fid); % Get headerline
+switch numel(strfind(textHeader,','))
+    case 11
+        textACREF = textscan(fid,'%07.0s %030.0s %020.0s %01.0s %02.0s %01.0s %01.0s %02.0s %03.0f %07.0s %04.0s','HeaderLines',0,'Delimiter',',');
+    case 13
+        textACREF = textscan(fid,'%07.0s %030.0s %020.0s %01.0s %02.0s %01.0s %01.0s %02.0s %03.0f %07.0s %04.0s %015.0s %050.0s','HeaderLines',0,'Delimiter',',');
+    otherwise
+        error('readfaaacreg:acreflen','%i fields in aircraft reference file, was expecting 11 or 13 fields',numel(strfind(textHeader,',')));
+end
 fclose(fid); % Close file
 
 % Parse
@@ -83,7 +98,7 @@ engType = strings(numLines,1);
 
 % Not parsed: Assign: Registration
 % regName = string(textMaster{7}); % Registrant Name
-% regState = string(textMaster{11}); % Registrantâ€™s State
+% regState = string(textMaster{11}); % Registrant’s State
 % codeStatus = string(textMaster{21}); % Status Code
 
 % Not parsed: Kit
@@ -93,7 +108,7 @@ engType = strings(numLines,1);
 % Not parsed: Other names
 % textMaster(8); % Street1
 % textMaster(9); % Street2
-% textMaster(10); % Registrantâ€™s City
+% textMaster(10); % Registrant’s City
 % textMaster(12); % Zip Code
 % textMaster(13); % Region
 % textMaster(14); % County Mail

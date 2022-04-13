@@ -1,4 +1,4 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
 % SPDX-License-Identifier: BSD-2-Clause
 tic
 % Inputs
@@ -8,6 +8,9 @@ outFile = [getenv('AEM_DIR_CORE') filesep 'output' filesep 'dof-' date '.mat'];
 
 % Execute
 Tdof = readfaadof('inFile',inFile,'isSave',isSave,'outFile',outFile);
+
+% Save with default filename without date
+save([getenv('AEM_DIR_CORE') filesep 'output' filesep 'dof.mat'],'Tdof');
 
 % Create some logicals
 isTower = strcmpi(Tdof.obs_type,'tower');
